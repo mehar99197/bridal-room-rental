@@ -6,6 +6,7 @@
   "scripts": {
     "dev": "vite",
     "build": "vite build",
+    "build:django": "vite build --outDir ../static/react-assets --base /static/react-assets/ --emptyOutDir && cp ../static/react-assets/index.html ../templates/react-index.html && rm ../static/react-assets/index.html",
     "lint": "eslint .",
     "preview": "vite preview"
   },
