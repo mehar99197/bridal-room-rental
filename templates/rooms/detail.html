@@ -1,0 +1,73 @@
+{% extends "base.html" %}
+{% block title %}Room Detail{% endblock %}
+{% block content %}
+<div class="container py-4" id="room-detail"><p class="text-muted">Loading...</p></div>
+{% endblock %}
+{% block scripts %}
+<script>
+const roomId = parseInt(window.location.pathname.split('/').filter(Boolean).pop());
+async function loadRoom() {
+    const resp = await api.get(`/rooms/${roomId}/`);
+    if (!resp.ok) { document.getElementById("room-detail").innerHTML = '<p class="text-danger">Room not found.</p>'; return; }
+    const room = await resp.json();
+    const container = document.getElementById("room-detail");
+    container.innerHTML = `
+        <div class="row">
+            <div class="col-lg-7 mb-4">
+                ${room.image ? `<img src="${room.image}" class="detail-img" alt="${room.name}">` : '<div class="detail-img bg-light d-flex align-items-center justify-content-center"><i class="bi bi-house-heart display-1 text-muted"></i></div>'}
+            </div>
+            <div class="col-lg-5">
+                <h2>${room.name}</h2>
+                <span class="badge bg-${room.status === 'available' ? 'success' : room.status === 'booked' ? 'warning' : 'secondary'} fs-6 mb-3">${room.status}</span>
+                <p>${room.description}</p>
+                <ul class="list-unstyled">
+                    <li class="mb-2"><i class="bi bi-people me-2"></i><strong>Capacity:</strong> ${room.capacity} guests</li>
+                    <li class="mb-2"><i class="bi bi-geo-alt me-2"></i><strong>Location:</strong> ${room.location}</li>
+                    <li class="mb-2"><i class="bi bi-list-check me-2"></i><strong>Amenities:</strong> ${room.amenities || 'N/A'}</li>
+                </ul>
+                <p class="price-tag display-6">$${room.price_per_hour}<small class="text-muted fs-6"> /hour</small></p>
+                <hr>
+                <h5>Book This Room</h5>
+                <form id="booking-form">
+                    <input type="hidden" name="room" value="${room.id}">
+                    <div class="mb-3">
+                        <label class="form-label">Start Date & Time</label>
+                        <input type="datetime-local" class="form-control" name="start_date" required>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">End Date & Time</label>
+                        <input type="datetime-local" class="form-control" name="end_date" required>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Notes</label>
+                        <textarea class="form-control" name="notes" rows="2"></textarea>
+                    </div>
+                    <button type="submit" class="btn btn-primary w-100">Book Now</button>
+                </form>
+            </div>
+        </div>
+    `;
+    document.getElementById("booking-form").addEventListener("submit", async (e) => {
+        e.preventDefault();
+        if (!api.isAuthenticated()) { showAlert("Please login first.", "warning"); window.location.href = "/login/"; return; }
+        const form = e.target;
+        const data = {
+            room: parseInt(form.room.value),
+            start_date: new Date(form.start_date.value).toISOString(),
+            end_date: new Date(form.end_date.value).toISOString(),
+            notes: form.notes.value,
+        };
+        const resp = await api.post("/bookings/", data);
+        const result = await resp.json();
+        if (!resp.ok) {
+            const msg = Object.values(result).flat().join(", ") || "Booking failed";
+            showAlert(msg, "danger");
+            return;
+        }
+        showAlert("Booking request sent! Waiting for admin approval.");
+        window.location.href = "/bookings/";
+    });
+}
+loadRoom();
+</script>
+{% endblock %}

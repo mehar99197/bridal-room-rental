@@ -1,0 +1,76 @@
+{% extends "base.html" %}
+{% block title %}Dress Detail{% endblock %}
+{% block content %}
+<div class="container py-4" id="dress-detail"><p class="text-muted">Loading...</p></div>
+{% endblock %}
+{% block scripts %}
+<script>
+const dressId = parseInt(window.location.pathname.split('/').filter(Boolean).pop());
+async function loadDress() {
+    const resp = await api.get(`/dresses/${dressId}/`);
+    if (!resp.ok) { document.getElementById("dress-detail").innerHTML = '<p class="text-danger">Dress not found.</p>'; return; }
+    const dress = await resp.json();
+    const container = document.getElementById("dress-detail");
+    container.innerHTML = `
+        <div class="row">
+            <div class="col-lg-7 mb-4">
+                ${dress.image ? `<img src="${dress.image}" class="detail-img" alt="${dress.name}">` : '<div class="detail-img bg-light d-flex align-items-center justify-content-center"><i class="bi bi-handbag display-1 text-muted"></i></div>'}
+            </div>
+            <div class="col-lg-5">
+                <h2>${dress.name}</h2>
+                <span class="badge bg-${dress.status === 'available' ? 'success' : dress.status === 'rented' ? 'warning' : 'secondary'} fs-6 mb-3">${dress.status}</span>
+                <p>${dress.description}</p>
+                <ul class="list-unstyled">
+                    <li class="mb-2"><i class="bi bi-tag me-2"></i><strong>Category:</strong> ${dress.category_name || 'Uncategorized'}</li>
+                    <li class="mb-2"><i class="bi bi-rulers me-2"></i><strong>Size:</strong> ${dress.size}</li>
+                    <li class="mb-2"><i class="bi bi-palette me-2"></i><strong>Color:</strong> ${dress.color}</li>
+                </ul>
+                <p class="price-tag display-6">$${dress.rental_price_per_day}<small class="text-muted fs-6"> /day</small></p>
+                <p class="text-muted">Deposit: $${dress.deposit_amount}</p>
+                <hr>
+                <h5>Rent This Dress</h5>
+                <form id="booking-form">
+                    <input type="hidden" name="dress" value="${dress.id}">
+                    <div class="mb-3">
+                        <label class="form-label">Start Date</label>
+                        <input type="date" class="form-control" name="start_date" id="start-date" readonly required>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">End Date</label>
+                        <input type="date" class="form-control" name="end_date" required>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Notes</label>
+                        <textarea class="form-control" name="notes" rows="2"></textarea>
+                    </div>
+                    <button type="submit" class="btn btn-primary w-100">Rent Now</button>
+                </form>
+            </div>
+        </div>
+    `;
+    document.getElementById("start-date").value = new Date().toISOString().split('T')[0];
+
+    document.getElementById("booking-form").addEventListener("submit", async (e) => {
+        e.preventDefault();
+        if (!api.isAuthenticated()) { showAlert("Please login first.", "warning"); window.location.href = "/login/"; return; }
+        const form = e.target;
+        const data = {
+            dress: parseInt(form.dress.value),
+            start_date: new Date(form.start_date.value).toISOString(),
+            end_date: new Date(form.end_date.value).toISOString(),
+            notes: form.notes.value,
+        };
+        const resp = await api.post("/bookings/", data);
+        const result = await resp.json();
+        if (!resp.ok) {
+            const msg = Object.values(result).flat().join(", ") || "Booking failed";
+            showAlert(msg, "danger");
+            return;
+        }
+        showAlert("Rental request sent! Waiting for admin approval.");
+        window.location.href = "/bookings/";
+    });
+}
+loadDress();
+</script>
+{% endblock %}

@@ -1,0 +1,77 @@
+{% extends "base.html" %}
+{% block title %}Bridal Room & Dress Rental{% endblock %}
+{% block content %}
+<section class="hero text-center">
+    <div class="container">
+        <h1 class="display-4 fw-bold mb-3">Your Dream Wedding Starts Here</h1>
+        <p class="lead mb-4">Browse elegant bridal rooms and stunning dresses for your special day.</p>
+        <div class="d-flex justify-content-center gap-3">
+            <a href="/rooms/" class="btn btn-light btn-lg px-4">Browse Rooms</a>
+            <a href="/dresses/" class="btn btn-outline-light btn-lg px-4">Browse Dresses</a>
+        </div>
+    </div>
+</section>
+
+<section class="container my-5">
+    <div class="row g-4">
+        <div class="col-md-4">
+            <div class="card text-center p-4">
+                <i class="bi bi-house-heart display-3 text-primary mb-3"></i>
+                <h4>Bridal Rooms</h4>
+                <p class="text-muted">Spacious, elegantly decorated rooms for your wedding preparations.</p>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="card text-center p-4">
+                <i class="bi bi-handbag display-3 text-primary mb-3"></i>
+                <h4>Bridal Dresses</h4>
+                <p class="text-muted">Designer wedding dresses available for rent at affordable prices.</p>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="card text-center p-4">
+                <i class="bi bi-calendar-check display-3 text-primary mb-3"></i>
+                <h4>Easy Booking</h4>
+                <p class="text-muted">Simple online booking with flexible scheduling and cancellation.</p>
+            </div>
+        </div>
+    </div>
+</section>
+
+<section class="bg-white py-5">
+    <div class="container text-center">
+        <h2 class="mb-4">Available Now</h2>
+        <div class="row g-4" id="featured-rooms"></div>
+    </div>
+</section>
+{% endblock %}
+{% block scripts %}
+<script>
+async function loadFeatured() {
+    const resp = await api.get("/rooms/?status=available");
+    if (!resp.ok) return;
+    const data = await resp.json();
+    const container = document.getElementById("featured-rooms");
+    const rooms = data.results?.slice(0, 3) || data.slice?.(0, 3) || [];
+    if (rooms.length === 0) {
+        container.innerHTML = '<p class="text-muted">No rooms available at the moment.</p>';
+        return;
+    }
+    rooms.forEach(room => {
+        container.innerHTML += `
+            <div class="col-md-4">
+                <div class="card h-100">
+                    ${room.image ? `<img src="${room.image}" class="card-img-top" alt="${room.name}">` : '<div class="card-img-top bg-light d-flex align-items-center justify-content-center"><i class="bi bi-house-heart display-4 text-muted"></i></div>'}
+                    <div class="card-body">
+                        <h5 class="card-title">${room.name}</h5>
+                        <p class="text-muted small">${room.description?.substring(0, 100) || ''}...</p>
+                        <p class="price-tag">$${room.price_per_hour}<small class="text-muted fs-6">/hr</small></p>
+                        <a href="/rooms/${room.id}/" class="btn btn-primary w-100">View Details</a>
+                    </div>
+                </div>
+            </div>`;
+    });
+}
+loadFeatured();
+</script>
+{% endblock %}
