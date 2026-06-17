@@ -1,45 +1,114 @@
-# 💎 Bridal Room & Dress Rental System
+<div align="center">
 
-A full-stack web application for managing bridal room and bridal dress rentals with a request-approval workflow. Built with **Django REST Framework** (backend) and **React + Vite + Tailwind CSS** (frontend).
+# 💍 Bridal Room & Dress Rental System
+
+**A full‑stack rental management platform for bridal rooms and dresses, with a request‑and‑approval booking workflow.**
+
+Built with a **Django REST Framework** API and a **React + Vite + Tailwind CSS** single‑page application.
+
+[![Django](https://img.shields.io/badge/Django-4.2+-092E20?logo=django&logoColor=white)](https://www.djangoproject.com/)
+[![DRF](https://img.shields.io/badge/DRF-3.15+-A30000?logo=django&logoColor=white)](https://www.django-rest-framework.org/)
+[![React](https://img.shields.io/badge/React-19-61DAFB?logo=react&logoColor=black)](https://react.dev/)
+[![Vite](https://img.shields.io/badge/Vite-8-646CFF?logo=vite&logoColor=white)](https://vite.dev/)
+[![Tailwind CSS](https://img.shields.io/badge/Tailwind-4-06B6D4?logo=tailwindcss&logoColor=white)](https://tailwindcss.com/)
+[![JWT](https://img.shields.io/badge/Auth-JWT-000000?logo=jsonwebtokens&logoColor=white)](https://jwt.io/)
+[![Docker](https://img.shields.io/badge/Docker-Compose-2496ED?logo=docker&logoColor=white)](https://www.docker.com/)
+
+</div>
 
 ---
 
-## 📋 Table of Contents
+## 📖 Table of Contents
 
-1. [Features](#-features)
-2. [Tech Stack](#-tech-stack)
-3. [Project Structure](#-project-structure)
-4. [Quick Start (Local)](#-quick-start-local)
-5. [Docker Deployment](#-docker-deployment)
-6. [API Documentation](#-api-documentation)
-7. [Workflow](#-workflow)
-8. [Admin Panel](#-admin-panel)
+- [Overview](#-overview)
+- [Key Features](#-key-features)
+- [Tech Stack](#-tech-stack)
+- [Architecture](#-architecture)
+- [Project Structure](#-project-structure)
+- [Getting Started](#-getting-started)
+  - [Option A — Local Development](#option-a--local-development-recommended-for-coding)
+  - [Option B — Docker Compose](#option-b--docker-compose-full-stack)
+- [Configuration](#-configuration)
+- [API Overview](#-api-overview)
+- [Booking Workflow](#-booking-workflow)
+- [Documentation](#-documentation)
+- [Contributing](#-contributing)
+- [License](#-license)
 
 ---
 
-## ✨ Features
+## 🌸 Overview
 
-- **User Authentication** — Register, login, JWT token-based auth
-- **Browse Rooms & Dresses** — Filter by status, category, paginated listings
-- **Booking Requests** — Users request a room/dress → admin approves/rejects
-- **Admin Dashboard** — Django admin panel with approve/reject actions
-- **Auto Price Calculation** — Server-side total price from room/dress rates × duration
-- **Custom Fields** — Room numbers, dress numbers for inventory tracking
-- **Responsive UI** — Light & elegant bridal theme (ivory/blush/champagne‑gold), serif typography, live price estimates, and smooth animations
-- **RESTful API** — Full CRUD for all entities
+The **Bridal Room & Dress Rental System** lets customers browse available bridal rooms and dresses, request bookings for a chosen date range, and track the status of those requests. Staff members review incoming requests from a dedicated admin panel (or the Django admin) and **approve** or **reject** them. Prices are calculated automatically on the server from each item's rate and the requested duration.
+
+The project is split into a stateless JSON API (Django REST Framework) and a decoupled React client that consumes it. The two can run independently in development (Vite dev server proxying to Django) or be composed together behind Nginx in production.
+
+> **Context:** This application was built as a database‑management coursework project (ADBMS). It is intended for learning and demonstration.
+
+---
+
+## ✨ Key Features
+
+| Area | Highlights |
+|------|-----------|
+| 🔐 **Authentication** | Email + password sign‑in, JWT access/refresh tokens, automatic silent token refresh, per‑tab sessions |
+| 🏛️ **Rooms** | Browse and filter bridal rooms by availability; per‑hour pricing; capacity, location & amenities |
+| 👗 **Dresses** | Browse and filter dresses by status and category; per‑day pricing with a refundable deposit; size & color |
+| 📅 **Bookings** | Request a room *or* dress for a date range; server‑side price calculation; full status lifecycle |
+| ✅ **Approval Workflow** | Requests start as `pending`; staff approve → `confirmed` or reject → `cancelled` |
+| 🛡️ **Role‑Based Access** | Public browsing, authenticated bookings, staff‑only management — enforced by DRF permissions and React route guards |
+| 🧑‍💼 **Admin** | Custom React admin panel **and** a themed Django admin with bulk approve/reject actions |
+| 👤 **Profiles** | Editable phone, address & avatar (multipart upload) |
+| 📚 **Self‑Documenting API** | Interactive Swagger UI and ReDoc generated from the live schema |
+| 🎨 **Polished UI** | Elegant ivory/blush/champagne‑gold bridal theme, responsive layout, live price estimates |
 
 ---
 
 ## 🛠 Tech Stack
 
-| Layer | Technology |
-|-------|-----------|
-| **Backend** | Django 4.2+, Django REST Framework |
-| **Auth** | SimpleJWT (access + refresh tokens) |
-| **Frontend** | React 19, Vite 8, Tailwind CSS 4 |
-| **Database** | SQLite (dev) / PostgreSQL (prod) |
-| **Container** | Docker & Docker Compose |
-| **Proxy** | Nginx |
+| Layer | Technologies |
+|-------|--------------|
+| **Backend** | Python, Django (4.2+), Django REST Framework |
+| **Auth** | `djangorestframework-simplejwt` (Bearer access + refresh tokens) |
+| **API Docs** | `drf-spectacular` (OpenAPI 3 → Swagger UI / ReDoc) |
+| **Frontend** | React 19, React Router 7, Vite 8, Tailwind CSS 4, Axios |
+| **Database** | SQLite (default; swappable for PostgreSQL) |
+| **Static/Media** | WhiteNoise (compressed static), Pillow (image handling) |
+| **Server** | Gunicorn (WSGI) |
+| **Infra** | Docker, Docker Compose, Nginx (reverse proxy) |
+
+---
+
+## 🏗 Architecture
+
+```mermaid
+flowchart LR
+    User([Browser])
+
+    subgraph Client["React SPA · Vite · Tailwind"]
+        UI[Pages & Components]
+        Ctx[AuthContext]
+        Axios[Axios + JWT interceptor]
+    end
+
+    subgraph Server["Django · DRF"]
+        URLs[URL Router]
+        Auth[accounts · JWT]
+        Bridal[bridal · rooms & dresses]
+        Book[bookings · approval]
+        Admin[Django Admin]
+    end
+
+    DB[(SQLite)]
+
+    User --> UI --> Ctx --> Axios
+    Axios -- "/api (Bearer token)" --> URLs
+    URLs --> Auth & Bridal & Book
+    Auth & Bridal & Book --> DB
+    Admin --> DB
+```
+
+In production, an **Nginx reverse proxy** sits in front of both tiers: it serves the built React assets, forwards `/api` and `/admin` to Django (Gunicorn), and serves `/media` and `/static` from shared volumes. See [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md) for the full picture.
 
 ---
 
@@ -47,260 +116,194 @@ A full-stack web application for managing bridal room and bridal dress rentals w
 
 ```
 bridal-room-rental/
-├── config/               # Django project settings
-│   ├── settings.py
-│   ├── urls.py
-│   └── wsgi.py
-├── accounts/             # User auth app
-│   ├── models.py         # Custom User model (email login)
-│   ├── serializers.py
-│   ├── views.py          # Register, Profile
-│   └── admin.py          # Custom UserAdmin
-├── bridal/               # Rooms & Dresses app
-│   ├── models.py         # Category, BridalRoom, BridalDress
-│   ├── serializers.py
-│   ├── views.py          # ViewSets with filtering
-│   └── admin.py          # Admin with room/dress number fields
-├── bookings/             # Booking requests app
-│   ├── models.py         # Booking (pending→confirmed→active→completed)
-│   ├── serializers.py    # Auto price calculation
-│   ├── views.py          # Approve/reject actions
-│   └── admin.py          # Bulk approve/reject actions
-├── frontend/             # React + Vite + Tailwind (and Django SPA template)
+├── config/                 # Django project (settings, root URLs, WSGI/ASGI)
+├── accounts/               # Custom User model, JWT auth, registration & profile
+├── bridal/                 # Category, BridalRoom, BridalDress — models, viewsets, admin
+├── bookings/               # Booking model, approval workflow, price calculation
+├── frontend/               # React + Vite + Tailwind SPA (and Django SPA fallback)
 │   ├── src/
-│   │   ├── api/          # Axios instance + JWT interceptors
-│   │   ├── context/      # AuthContext (login/logout/register)
-│   │   ├── components/   # Navbar, Footer, ProtectedRoute
-│   │   └── pages/        # Landing, Login, Register, Dashboard,
-│   │                     # RoomList, RoomDetail, DressList,
-│   │                     # DressDetail, BookingList
-│   ├── templates/        # react-index.html served by Django in prod
-│   ├── vite.config.js    # Proxy /api → Django
-│   └── package.json
-├── static/               # Static assets (CSS, JS, admin theme)
-├── templates/            # Django HTML templates
-├── docker-compose.yml    # Full stack deployment
-├── Dockerfile            # Django container
-├── nginx.conf            # Nginx config
-└── requirements.txt      # Python dependencies
+│   │   ├── api/            # Axios instance + JWT request/refresh interceptors
+│   │   ├── context/        # AuthContext (login, register, profile, logout)
+│   │   ├── components/     # Navbar, Footer, route guards (Protected/Admin/Guest)
+│   │   └── pages/          # Landing, Login, Register, Dashboard, Rooms, Dresses,
+│   │                       # Bookings, EditProfile, AdminPanel
+│   ├── templates/          # react-index.html (served by Django when DEBUG=False)
+│   └── vite.config.js      # Dev proxy: /api, /admin, /media → Django
+├── docs/                   # 📚 Full project documentation (see below)
+├── media/                  # Uploaded images (avatars, rooms, dresses)
+├── docker-compose.yml      # Production stack: Django + React + Nginx
+├── docker-compose.dev.yml  # Lightweight Django-only dev container
+├── Dockerfile              # Django image (Gunicorn)
+├── Dockerfile.react        # React build → Nginx image
+├── nginx.conf              # Reverse-proxy routing
+├── entrypoint.sh           # migrate → collectstatic → gunicorn
+└── requirements.txt        # Python dependencies
 ```
 
 ---
 
-## 🚀 Quick Start (Local)
+## 🚀 Getting Started
 
 ### Prerequisites
 
-- Python 3.10+
-- Node.js 18+
-- npm
+- **Python** 3.11+
+- **Node.js** 18+ and npm
+- *(optional)* **Docker** & Docker Compose for the containerized stack
 
-### 1. Backend Setup
+### Option A — Local Development (recommended for coding)
+
+Run the API and the SPA as two processes with hot reload.
+
+**1. Backend (Django API)**
 
 ```bash
-# Create virtual environment
+# from the repository root
 python -m venv venv
-source venv/bin/activate  # Linux/Mac
-# venv\Scripts\activate   # Windows
+source venv/bin/activate          # Windows: venv\Scripts\activate
 
-# Install dependencies
 pip install -r requirements.txt
-
-# Run migrations
 python manage.py migrate
-
-# Create superuser
-python manage.py createsuperuser
-
-# Start Django server
-python manage.py runserver
+python manage.py createsuperuser  # create your own admin login
+python manage.py runserver        # → http://localhost:8000
 ```
 
-### 2. Frontend Setup
+**2. Frontend (React SPA)** — in a second terminal:
 
 ```bash
 cd frontend
 npm install
-npm run dev
+npm run dev                       # → http://localhost:5173
 ```
 
-The React dev server runs on `http://localhost:5173` and proxies API calls to Django at `http://localhost:8000`.
+The Vite dev server proxies `/api`, `/admin`, and `/media` to Django on port `8000`, so you only need to open **http://localhost:5173**.
 
-To build the SPA so Django serves it in production (`DEBUG=False`):
+| URL | What it serves |
+|-----|----------------|
+| http://localhost:5173 | React app (with hot reload) |
+| http://localhost:8000/admin/ | Django admin panel |
+| http://localhost:8000/api/docs/ | Swagger UI (interactive API) |
+| http://localhost:8000/api/redoc/ | ReDoc API reference |
 
-```bash
-cd frontend
-npm run build:django   # outputs to ../static/react-assets + frontend/templates/react-index.html
-```
+### Option B — Docker Compose (full stack)
 
-### Environment Variables
-
-The Django settings read these (sensible dev defaults apply if unset):
-
-| Variable | Default | Purpose |
-|----------|---------|---------|
-| `DEBUG` | `True` | Set to `False` in production (enables the SPA catch-all route + WhiteNoise static serving) |
-| `SECRET_KEY` | dev key | Override in production |
-| `DJANGO_ALLOWED_HOSTS` | `*` | Comma-separated allowed hosts |
-
-### 3. Access the App
-
-| URL | Description |
-|-----|-------------|
-| `http://localhost:5173` | React frontend (dev) |
-| `http://localhost:8000` | Django backend (API) |
-| `http://localhost:8000/admin/` | Django admin panel |
-
----
-
-## 🐳 Docker Deployment
-
-### Build & Run
+Brings up Django (Gunicorn), the built React app, and an Nginx reverse proxy.
 
 ```bash
-# Build all containers
-docker compose build
-
-# Start services
-docker compose up -d
-
-# Create superuser (first time)
+docker compose up --build -d
 docker compose exec backend python manage.py createsuperuser
-
-# View logs
-docker compose logs -f
 ```
 
-### Services
+Then open **http://localhost:8090** (the Nginx entry point).
 
-| Service | Port | Description |
-|---------|------|-------------|
-| `backend` | 8000 | Django + DRF API |
-| `frontend` | 5173 | React dev server |
-| `nginx` | 80 | Production reverse proxy |
+| Service | Container | Host Port |
+|---------|-----------|-----------|
+| `nginx` | reverse proxy (main entry) | **8090** |
+| `backend` | Django + Gunicorn | 8002 |
+| `frontend` | Nginx serving the React build | 3001 |
 
-### Docker Compose Configuration
+For a quick Django‑only container with live reload, use the dev compose file:
 
-The `docker-compose.yml` sets up:
-- **backend** — Django application with gunicorn
-- **frontend** — Nginx serving built React app
-- **nginx** — Reverse proxy routing `/api`, `/admin` → Django, `/` → React
+```bash
+docker compose -f docker-compose.dev.yml up --build   # → http://localhost:8000
+```
+
+> See [docs/DEPLOYMENT.md](docs/DEPLOYMENT.md) for the full deployment guide, including the single‑server “Django serves the SPA” mode.
 
 ---
 
-## 📡 API Documentation
+## ⚙️ Configuration
 
-### Authentication Endpoints
+The backend is configured via environment variables (sensible development defaults apply if unset):
 
-| Method | Endpoint | Auth | Description |
-|--------|----------|------|-------------|
-| POST | `/api/auth/register/` | No | Create account |
-| POST | `/api/auth/login/` | No | Get JWT tokens |
-| POST | `/api/auth/token/refresh/` | No | Refresh access token |
-| GET/PUT | `/api/auth/profile/` | Yes | View/update profile |
+| Variable | Default | Description |
+|----------|---------|-------------|
+| `DEBUG` | `True` | `False` in production — enables the SPA catch‑all route and WhiteNoise static serving |
+| `SECRET_KEY` | *(insecure dev key)* | **Must** be overridden in production |
+| `DJANGO_ALLOWED_HOSTS` | `*` | Comma‑separated list of allowed hosts |
+| `PYTHONUNBUFFERED` | — | Set to `1` in containers for unbuffered logs |
 
-### Category Endpoints
+Key defaults baked into `config/settings.py`:
 
-| Method | Endpoint | Auth | Description |
-|--------|----------|------|-------------|
-| GET | `/api/categories/` | No | List categories |
-| POST | `/api/categories/` | Yes | Create category |
-| GET/PUT/PATCH/DELETE | `/api/categories/{id}/` | Varies | CRUD single category |
-
-### Room Endpoints
-
-| Method | Endpoint | Auth | Description |
-|--------|----------|------|-------------|
-| GET | `/api/rooms/` | No | List rooms (?status=available) |
-| POST | `/api/rooms/` | Yes | Create room |
-| GET/PUT/PATCH/DELETE | `/api/rooms/{id}/` | Varies | CRUD single room |
-
-### Dress Endpoints
-
-| Method | Endpoint | Auth | Description |
-|--------|----------|------|-------------|
-| GET | `/api/dresses/` | No | List dresses (?status=&category=) |
-| POST | `/api/dresses/` | Yes | Create dress |
-| GET/PUT/PATCH/DELETE | `/api/dresses/{id}/` | Varies | CRUD single dress |
-
-### Booking Endpoints
-
-| Method | Endpoint | Auth | Description |
-|--------|----------|------|-------------|
-| GET | `/api/bookings/` | Yes | List bookings (own or all for staff) |
-| POST | `/api/bookings/` | Yes | Create booking request (status: pending) |
-| GET/PUT/PATCH/DELETE | `/api/bookings/{id}/` | Yes | CRUD single booking |
-| POST | `/api/bookings/{id}/cancel/` | Yes | Cancel pending/confirmed booking |
-| POST | `/api/bookings/{id}/approve/` | Admin | Approve pending booking |
-| POST | `/api/bookings/{id}/reject/` | Admin | Reject pending booking |
-
-> **Note:** `total_price` is auto-calculated server-side when creating a booking.
+- **JWT lifetimes** — access token: **1 day**, refresh token: **7 days**
+- **Pagination** — `PageNumberPagination`, **20** items per page
+- **CORS** — all origins allowed (development convenience; tighten for production)
+- **Database** — SQLite at `db.sqlite3` (swap `DATABASES` for PostgreSQL if desired)
 
 ---
 
-## 🔄 Workflow
+## 📡 API Overview
 
-```
-User                    Server                    Admin
-  |                        |                        |
-  |-- POST /bookings/ ---->|                        |
-  |   (status: pending)    |                        |
-  |                        |                        |
-  |   "Waiting approval"   |                        |
-  |                        |                        |
-  |                        |  POST /bookings/1/approve/
-  |                        |<-----------------------|
-  |                        |  (status: confirmed)   |
-  |   "Booking confirmed"  |                        |
-  |                        |                        |
-  |            OR          |                        |
-  |                        |                        |
-  |                        |  POST /bookings/1/reject/
-  |                        |<-----------------------|
-  |                        |  (status: cancelled)   |
-  |   "Booking rejected"   |                        |
-```
+Base path: **`/api`** · Auth: **`Authorization: Bearer <access_token>`**
 
-### Booking Statuses
+| Method | Endpoint | Auth | Description |
+|--------|----------|------|-------------|
+| `POST` | `/api/auth/register/` | Public | Create an account |
+| `POST` | `/api/auth/login/` | Public | Obtain JWT tokens (email + password) |
+| `POST` | `/api/auth/token/refresh/` | Public | Refresh an access token |
+| `GET` `PUT` `PATCH` | `/api/auth/profile/` | User | View / update own profile |
+| `GET` `POST` | `/api/categories/` | Read public · Write staff | Dress categories |
+| `GET` `POST` | `/api/rooms/` | Read public · Write staff | Bridal rooms (`?status=`) |
+| `GET` `POST` | `/api/dresses/` | Read public · Write staff | Bridal dresses (`?status=`, `?category=`) |
+| `GET` `POST` | `/api/bookings/` | User | List own bookings / create a request |
+| `POST` | `/api/bookings/{id}/cancel/` | Owner | Cancel a pending/confirmed booking |
+| `POST` | `/api/bookings/{id}/approve/` | Staff | Approve a pending booking |
+| `POST` | `/api/bookings/{id}/reject/` | Staff | Reject a pending booking |
 
-| Status | Description |
-|--------|-------------|
-| **pending** | Awaiting admin approval |
-| **confirmed** | Approved by admin |
-| **active** | Currently in progress |
-| **completed** | Finished |
-| **cancelled** | Rejected by admin or cancelled by user |
+Interactive docs are available at **`/api/docs/`** (Swagger) and **`/api/redoc/`** (ReDoc). The full, example‑rich reference lives in [docs/API_REFERENCE.md](docs/API_REFERENCE.md).
 
 ---
 
-## 🛡 Admin Panel
+## 🔄 Booking Workflow
 
-Access at `/admin/` with a superuser account.
-
-### Features
-
-- **User Management** — View/search users, set staff/superuser status
-- **Room Management** — Add/edit rooms with `room_number`, status, pricing
-- **Dress Management** — Add/edit dresses with `dress_number`, category, size
-- **Booking Management** — View all bookings, approve/reject via dropdown or bulk actions
-- **Bulk Actions** — Select multiple bookings → "Approve selected" / "Reject selected"
-- **Custom Theming** — Dark gradient theme with glassmorphism and animations
-
-### Default Admin Credentials
-
+```mermaid
+stateDiagram-v2
+    [*] --> pending: User submits request
+    pending --> confirmed: Staff approves
+    pending --> cancelled: Staff rejects / User cancels
+    confirmed --> active: Rental begins
+    confirmed --> cancelled: User cancels
+    active --> completed: Rental ends
+    completed --> [*]
+    cancelled --> [*]
 ```
-Email:    admin@example.com
-Password: admin123
-```
+
+When a booking is created, the server computes `total_price` automatically:
+
+- **Rooms** → `price_per_hour × hours` (minimum 1 hour)
+- **Dresses** → `rental_price_per_day × days` (minimum 1 day) `+ deposit_amount`
+
+---
+
+## 📚 Documentation
+
+In‑depth guides live in the [`docs/`](docs/) directory:
+
+| Document | Contents |
+|----------|----------|
+| [Architecture](docs/ARCHITECTURE.md) | System design, request lifecycle, deployment topology |
+| [API Reference](docs/API_REFERENCE.md) | Every endpoint with request/response examples & error cases |
+| [Data Model](docs/DATA_MODEL.md) | Entity‑relationship diagram and field‑by‑field schema |
+| [Setup Guide](docs/SETUP.md) | Detailed local environment setup & common commands |
+| [Deployment Guide](docs/DEPLOYMENT.md) | Docker, Nginx, and single‑server production modes |
+| [Frontend Guide](docs/FRONTEND.md) | React app structure, routing, auth flow & state |
+| [Contributing](docs/CONTRIBUTING.md) | Conventions, workflow, and how to propose changes |
+
+---
+
+## 🤝 Contributing
+
+Contributions are welcome. Please read the [Contributing Guide](docs/CONTRIBUTING.md) for branch naming, commit conventions, and the pull‑request process. In short: branch from `main`, keep changes focused, and describe the *why* in your PR.
 
 ---
 
 ## 📄 License
 
-This project is for educational/demonstration purposes.
+No license file is currently included. This project was created for academic/educational purposes; if you intend to reuse it, please add an appropriate license (e.g. [MIT](https://choosealicense.com/licenses/mit/)) and check with the author first.
 
 ---
 
-## 👨‍💻 Author
+<div align="center">
 
-Built with ❤️ using Django & React
+Built with ❤️ using **Django** & **React**.
+
+</div>
