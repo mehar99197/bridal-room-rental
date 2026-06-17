@@ -4,8 +4,8 @@ from .models import Booking
 
 class BookingSerializer(serializers.ModelSerializer):
     user_email = serializers.ReadOnlyField(source="user.email")
-    room_name = serializers.ReadOnlyField(source="room.name", read_only=True)
-    dress_name = serializers.ReadOnlyField(source="dress.name", read_only=True)
+    room_name = serializers.ReadOnlyField(source="room.name")
+    dress_name = serializers.ReadOnlyField(source="dress.name")
 
     class Meta:
         model = Booking

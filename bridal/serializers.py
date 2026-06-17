@@ -16,7 +16,7 @@ class BridalRoomSerializer(serializers.ModelSerializer):
 
 
 class BridalDressSerializer(serializers.ModelSerializer):
-    category_name = serializers.ReadOnlyField(source="category.name", read_only=True)
+    category_name = serializers.ReadOnlyField(source="category.name")
 
     class Meta:
         model = BridalDress
