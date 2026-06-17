@@ -6,6 +6,7 @@ class User(AbstractUser):
     email = models.EmailField(unique=True)
     phone = models.CharField(max_length=15, blank=True)
     address = models.TextField(blank=True)
+    avatar = models.ImageField(upload_to="avatars/", blank=True, null=True)
     is_verified = models.BooleanField(default=False)
 
     USERNAME_FIELD = "email"

@@ -1,3 +1,4 @@
+from decimal import Decimal
 from rest_framework import serializers
 from .models import Booking
 
@@ -25,6 +26,8 @@ class BookingCreateSerializer(serializers.ModelSerializer):
     def validate(self, data):
         if not data.get("room") and not data.get("dress"):
             raise serializers.ValidationError("Must specify a room or a dress to book.")
+        if data["end_date"] <= data["start_date"]:
+            raise serializers.ValidationError("End date must be after the start date.")
         return data
 
     def create(self, validated_data):
@@ -32,13 +35,15 @@ class BookingCreateSerializer(serializers.ModelSerializer):
         dress = validated_data.get("dress")
         start = validated_data["start_date"]
         end = validated_data["end_date"]
-        duration = (end - start).total_seconds() / 3600
+        hours = (end - start).total_seconds() / 3600
         if room:
-            total = room.price_per_hour * max(1, duration / 24)
+            # Rooms are priced per hour (minimum 1 hour billed).
+            total = room.price_per_hour * Decimal(str(max(1, hours)))
         elif dress:
-            days = max(1, duration / 24)
-            total = dress.rental_price_per_day * days + dress.deposit_amount
+            # Dresses are priced per day (minimum 1 day) plus a refundable deposit.
+            days = max(1, hours / 24)
+            total = dress.rental_price_per_day * Decimal(str(days)) + dress.deposit_amount
         else:
-            total = 0
+            total = Decimal("0")
         validated_data["total_price"] = round(total, 2)
         return super().create(validated_data)

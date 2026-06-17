@@ -19,4 +19,7 @@ class RegisterSerializer(serializers.ModelSerializer):
 class UserSerializer(serializers.ModelSerializer):
     class Meta:
         model = User
-        fields = ["id", "username", "email", "phone", "address", "is_verified", "is_staff"]
+        fields = ["id", "username", "email", "phone", "address", "avatar", "is_verified", "is_staff"]
+        # Identity & privilege fields are display-only — a profile update may
+        # only change phone, address, and the avatar image.
+        read_only_fields = ["id", "username", "email", "is_verified", "is_staff"]

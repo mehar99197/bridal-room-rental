@@ -25,7 +25,7 @@ A full-stack web application for managing bridal room and bridal dress rentals w
 - **Admin Dashboard** — Django admin panel with approve/reject actions
 - **Auto Price Calculation** — Server-side total price from room/dress rates × duration
 - **Custom Fields** — Room numbers, dress numbers for inventory tracking
-- **Responsive UI** — Dark themed, glassmorphism React frontend with animations
+- **Responsive UI** — Light & elegant bridal theme (ivory/blush/champagne‑gold), serif typography, live price estimates, and smooth animations
 - **RESTful API** — Full CRUD for all entities
 
 ---
@@ -66,9 +66,7 @@ bridal-room-rental/
 │   ├── serializers.py    # Auto price calculation
 │   ├── views.py          # Approve/reject actions
 │   └── admin.py          # Bulk approve/reject actions
-├── frontend/             # Template serving for Django
-│   └── templates/
-├── react-frontend/       # React + Vite + Tailwind
+├── frontend/             # React + Vite + Tailwind (and Django SPA template)
 │   ├── src/
 │   │   ├── api/          # Axios instance + JWT interceptors
 │   │   ├── context/      # AuthContext (login/logout/register)
@@ -76,6 +74,7 @@ bridal-room-rental/
 │   │   └── pages/        # Landing, Login, Register, Dashboard,
 │   │                     # RoomList, RoomDetail, DressList,
 │   │                     # DressDetail, BookingList
+│   ├── templates/        # react-index.html served by Django in prod
 │   ├── vite.config.js    # Proxy /api → Django
 │   └── package.json
 ├── static/               # Static assets (CSS, JS, admin theme)
@@ -120,12 +119,29 @@ python manage.py runserver
 ### 2. Frontend Setup
 
 ```bash
-cd react-frontend
+cd frontend
 npm install
 npm run dev
 ```
 
 The React dev server runs on `http://localhost:5173` and proxies API calls to Django at `http://localhost:8000`.
+
+To build the SPA so Django serves it in production (`DEBUG=False`):
+
+```bash
+cd frontend
+npm run build:django   # outputs to ../static/react-assets + frontend/templates/react-index.html
+```
+
+### Environment Variables
+
+The Django settings read these (sensible dev defaults apply if unset):
+
+| Variable | Default | Purpose |
+|----------|---------|---------|
+| `DEBUG` | `True` | Set to `False` in production (enables the SPA catch-all route + WhiteNoise static serving) |
+| `SECRET_KEY` | dev key | Override in production |
+| `DJANGO_ALLOWED_HOSTS` | `*` | Comma-separated allowed hosts |
 
 ### 3. Access the App
 

@@ -1,7 +1,9 @@
 import { Navigate } from 'react-router-dom'
 import { useAuth } from '../context/AuthContext'
 
-export default function ProtectedRoute({ children }) {
+// Public-only routes (login / register). If already authenticated, bounce the
+// user to their own home so the auth forms never render behind a logged-in nav.
+export default function GuestRoute({ children }) {
   const { user, loading } = useAuth()
   if (loading) {
     return (
@@ -10,6 +12,6 @@ export default function ProtectedRoute({ children }) {
       </div>
     )
   }
-  if (!user) return <Navigate to="/login" replace />
+  if (user) return <Navigate to={user.is_staff ? '/admin-panel' : '/dashboard'} replace />
   return children
 }

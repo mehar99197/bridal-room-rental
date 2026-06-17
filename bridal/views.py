@@ -5,6 +5,13 @@ from .models import BridalRoom, BridalDress, Category
 from .serializers import BridalRoomSerializer, BridalDressSerializer, CategorySerializer
 
 
+class IsStaffOrReadOnly(permissions.BasePermission):
+    def has_permission(self, request, view):
+        if request.method in permissions.SAFE_METHODS:
+            return True
+        return request.user.is_authenticated and request.user.is_staff
+
+
 @extend_schema_view(
     list=extend_schema(summary="List categories", tags=["Categories"]),
     retrieve=extend_schema(summary="Get category details", tags=["Categories"]),
@@ -16,7 +23,7 @@ from .serializers import BridalRoomSerializer, BridalDressSerializer, CategorySe
 class CategoryViewSet(viewsets.ModelViewSet):
     queryset = Category.objects.all()
     serializer_class = CategorySerializer
-    permission_classes = [permissions.IsAuthenticatedOrReadOnly]
+    permission_classes = [IsStaffOrReadOnly]
 
 
 @extend_schema_view(
@@ -36,7 +43,7 @@ class CategoryViewSet(viewsets.ModelViewSet):
 class BridalRoomViewSet(viewsets.ModelViewSet):
     queryset = BridalRoom.objects.all()
     serializer_class = BridalRoomSerializer
-    permission_classes = [permissions.IsAuthenticatedOrReadOnly]
+    permission_classes = [IsStaffOrReadOnly]
 
     def get_queryset(self):
         qs = BridalRoom.objects.all()
@@ -64,7 +71,7 @@ class BridalRoomViewSet(viewsets.ModelViewSet):
 class BridalDressViewSet(viewsets.ModelViewSet):
     queryset = BridalDress.objects.all()
     serializer_class = BridalDressSerializer
-    permission_classes = [permissions.IsAuthenticatedOrReadOnly]
+    permission_classes = [IsStaffOrReadOnly]
 
     def get_queryset(self):
         qs = BridalDress.objects.all()
